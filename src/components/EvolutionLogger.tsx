@@ -60,15 +60,15 @@ export const EvolutionLogger = ({ evolutionPath }: EvolutionLoggerProps) => {
   const totalEntries = evolutionPath.length;
 
   return (
-    <div className="bg-quantum-field/80 backdrop-blur-sm border border-foreground/20 rounded-lg overflow-hidden max-w-md">
+    <div className="bg-quantum-field/80 backdrop-blur-sm border border-foreground/20 rounded-lg overflow-hidden max-w-full sm:max-w-md">
       {/* Header */}
       <div 
-        className="flex items-center justify-between p-3 cursor-pointer hover:bg-quantum-field/60 transition-colors"
+        className="flex items-center justify-between p-2 sm:p-3 cursor-pointer hover:bg-quantum-field/60 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-resonance-gamma rounded-full animate-pulse-resonance" />
-          <span className="text-sm font-medium text-foreground">Evolution Log</span>
+          <span className="text-xs sm:text-sm font-medium text-foreground">Evolution</span>
           <span className="text-xs text-foreground/60">({totalEntries})</span>
         </div>
         <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export const EvolutionLogger = ({ evolutionPath }: EvolutionLoggerProps) => {
             className="p-1 hover:bg-foreground/10 rounded transition-colors"
             title="Export log"
           >
-            <Download size={14} className="text-foreground/70" />
+            <Download size={12} className="text-foreground/70" />
           </button>
           {isExpanded ? (
             <ChevronUp size={16} className="text-foreground/70" />
@@ -91,7 +91,7 @@ export const EvolutionLogger = ({ evolutionPath }: EvolutionLoggerProps) => {
       </div>
 
       {/* Phase Distribution Summary */}
-      <div className="px-3 pb-2">
+      <div className="px-2 pb-2 sm:px-3">
         <div className="grid grid-cols-4 gap-1 text-xs">
           {Object.entries(phaseDistribution).map(([phase, count]) => (
             <div key={phase} className="text-center">

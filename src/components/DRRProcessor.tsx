@@ -11,11 +11,16 @@ export class DRRProcessor {
   }
 
   detectResonanceRoots(audioBuffer: Float32Array): ResonanceData {
+    // Log actual audio input for debugging
+    const rms = this.calculateRMS(audioBuffer);
+    console.log("DRR Processing - RMS:", rms, "Buffer length:", audioBuffer.length);
+
     // Apply FFT to get frequency domain data
     const frequencies = this.performFFT(audioBuffer);
     
     // Detect dominant frequencies
     const dominantFreq = this.findDominantFrequency(frequencies);
+    console.log("Dominant frequency detected:", dominantFreq, "Hz");
     
     // Calculate harmonics
     const harmonics = this.extractHarmonics(frequencies, dominantFreq);
@@ -29,7 +34,7 @@ export class DRRProcessor {
 
     const resonanceData: ResonanceData = {
       frequency: dominantFreq,
-      amplitude,
+      amplitude: Math.max(amplitude, rms * 0.1), // Ensure some response to audio
       harmonics,
       phase,
       coherence,
@@ -42,7 +47,16 @@ export class DRRProcessor {
       this.resonanceHistory.shift();
     }
 
+    console.log("Resonance data:", resonanceData);
     return resonanceData;
+  }
+
+  private calculateRMS(buffer: Float32Array): number {
+    let sum = 0;
+    for (let i = 0; i < buffer.length; i++) {
+      sum += buffer[i] * buffer[i];
+    }
+    return Math.sqrt(sum / buffer.length);
   }
 
   private performFFT(buffer: Float32Array): Float32Array {
@@ -68,10 +82,13 @@ export class DRRProcessor {
 
   private findDominantFrequency(frequencies: Float32Array): number {
     let maxIndex = 0;
-    let maxValue = 0;
+    let maxValue = -Infinity;
     
-    // Skip DC component and very low frequencies
-    for (let i = 10; i < frequencies.length; i++) {
+    // Skip DC component and very low frequencies, focus on audible range
+    const startBin = Math.floor(50 * frequencies.length * 2 / this.sampleRate); // 50Hz
+    const endBin = Math.floor(4000 * frequencies.length * 2 / this.sampleRate); // 4kHz
+    
+    for (let i = startBin; i < Math.min(endBin, frequencies.length); i++) {
       if (frequencies[i] > maxValue) {
         maxValue = frequencies[i];
         maxIndex = i;
@@ -79,7 +96,11 @@ export class DRRProcessor {
     }
     
     // Convert bin index to frequency
-    return (maxIndex * this.sampleRate) / (frequencies.length * 2);
+    const frequency = (maxIndex * this.sampleRate) / (frequencies.length * 2);
+    console.log("Frequency analysis - Max value:", maxValue, "at", frequency, "Hz");
+    
+    // Return a reasonable frequency even if no strong peak is found
+    return frequency > 20 ? frequency : 440; // Default to A4 if no clear signal
   }
 
   private extractHarmonics(frequencies: Float32Array, fundamental: number): number[] {

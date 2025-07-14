@@ -21,30 +21,41 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
     return cleanup;
   }, []);
 
+
   const initializeAudio = async () => {
     try {
-      // Request microphone access
+      // Enhanced mobile audio constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: false,
           noiseSuppression: false,
           autoGainControl: false,
-          sampleRate: 44100
-        } 
+          sampleRate: 44100,
+          // Mobile-specific constraints
+          channelCount: 1
+        }
       });
       
       mediaStreamRef.current = stream;
 
-      // Create audio context
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Create audio context with mobile compatibility
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      audioContextRef.current = new AudioContext();
       const audioContext = audioContextRef.current;
 
-      // Create analyser node
+      // Resume audio context if suspended (required on mobile)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+
+      // Create analyser node with optimized settings
       analyserRef.current = audioContext.createAnalyser();
       const analyser = analyserRef.current;
       
       analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.1;
+      analyser.smoothingTimeConstant = 0.3; // Increased for mobile stability
+      analyser.minDecibels = -90;
+      analyser.maxDecibels = -10;
       
       // Connect audio source to analyser
       const source = audioContext.createMediaStreamSource(stream);
@@ -56,11 +67,17 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
       setIsRecording(true);
       startAnalysis();
       
-      toast("Audio capture initialized - Listening for resonance patterns");
+      toast("Audio capture active - Make some noise to see patterns emerge!");
+      console.log("Audio initialized successfully", {
+        sampleRate: audioContext.sampleRate,
+        state: audioContext.state,
+        fftSize: analyser.fftSize
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Failed to initialize audio: ${message}`);
-      toast.error("Failed to access microphone");
+      console.error("Audio initialization failed:", err);
+      setError(`Audio access denied. Please allow microphone permissions and try again.`);
+      toast.error("Microphone access required for resonance detection");
     }
   };
 
@@ -77,6 +94,10 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
       // Convert to time domain for processing
       const timeData = new Float32Array(analyser.fftSize);
       analyser.getFloatTimeDomainData(timeData);
+
+      // Log actual audio levels for debugging
+      const avgLevel = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length;
+      console.log("Audio level:", avgLevel, "dB");
 
       onAudioData(dataArray);
       onProcessedData(timeData);
@@ -103,25 +124,8 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
     setIsRecording(false);
   };
 
-  if (error) {
-    return (
-      <div className="fixed bottom-4 right-4 bg-destructive/20 border border-destructive/50 rounded-lg p-4 max-w-sm">
-        <p className="text-sm text-destructive">{error}</p>
-        <button 
-          onClick={() => {
-            setError(null);
-            initializeAudio();
-          }}
-          className="mt-2 text-xs text-destructive hover:text-destructive/80"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="fixed bottom-4 right-4 z-20">
+    <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 z-20">
       <div className={`
         flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm
         ${isRecording 
@@ -130,13 +134,35 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
         }
       `}>
         <div className={`
-          w-2 h-2 rounded-full
+          w-3 h-3 rounded-full
           ${isRecording ? 'bg-resonance-gamma animate-pulse-resonance' : 'bg-foreground/40'}
         `} />
         <span className="text-xs text-foreground/70">
-          {isRecording ? 'Capturing audio' : 'Audio inactive'}
+          {isRecording ? 'Listening' : 'Audio off'}
         </span>
+        {/* Mobile-friendly retry button */}
+        {error && (
+          <button 
+            onClick={() => {
+              setError(null);
+              initializeAudio();
+            }}
+            className="ml-2 text-xs text-resonance-gamma hover:text-resonance-gamma/80 underline"
+          >
+            Retry
+          </button>
+        )}
       </div>
+      
+      {/* Mobile error display */}
+      {error && (
+        <div className="mt-2 bg-destructive/20 border border-destructive/50 rounded-lg p-3 max-w-xs">
+          <p className="text-xs text-destructive mb-2">{error}</p>
+          <p className="text-xs text-foreground/60">
+            Tap "Retry" and allow microphone access when prompted.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

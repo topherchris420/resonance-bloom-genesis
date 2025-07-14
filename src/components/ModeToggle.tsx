@@ -11,29 +11,31 @@ export const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
       <button
         onClick={() => onModeChange('observer')}
         className={`
-          flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300
+          flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-md transition-all duration-300
           ${mode === 'observer' 
             ? 'bg-resonance-beta text-foreground shadow-sm' 
             : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
           }
         `}
       >
-        <Eye size={16} />
-        <span className="text-sm font-medium">Observer</span>
+        <Eye size={14} />
+        <span className="text-xs sm:text-sm font-medium hidden sm:inline">Observer</span>
+        <span className="text-xs font-medium sm:hidden">Obs</span>
       </button>
       
       <button
         onClick={() => onModeChange('participant')}
         className={`
-          flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300
+          flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-md transition-all duration-300
           ${mode === 'participant' 
             ? 'bg-resonance-gamma text-void shadow-sm' 
             : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
           }
         `}
       >
-        <Hand size={16} />
-        <span className="text-sm font-medium">Participant</span>
+        <Hand size={14} />
+        <span className="text-xs sm:text-sm font-medium hidden sm:inline">Participant</span>
+        <span className="text-xs font-medium sm:hidden">Part</span>
       </button>
     </div>
   );

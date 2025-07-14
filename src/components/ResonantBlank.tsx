@@ -5,6 +5,7 @@ import { DRRProcessor } from './DRRProcessor';
 import { EvolutionLogger } from './EvolutionLogger';
 import { ModeToggle } from './ModeToggle';
 import { ResonanceVisualization } from './ResonanceVisualization';
+import { TouchInteraction } from './TouchInteraction';
 import { toast } from 'sonner';
 
 export interface ResonanceData {
@@ -66,6 +67,37 @@ export const ResonantBlank = () => {
     }));
   }, []);
 
+  // Handle touch gestures (mobile input simulation)
+  const handleGesture = useCallback((gestureData: { type: string; intensity: number; frequency: number }) => {
+    if (!drrProcessorRef.current || systemState.mode !== 'participant') return;
+
+    console.log("Touch gesture detected:", gestureData);
+
+    // Convert gesture to synthetic resonance data
+    const syntheticResonance: ResonanceData = {
+      frequency: gestureData.frequency,
+      amplitude: gestureData.intensity,
+      harmonics: [gestureData.frequency * 2, gestureData.frequency * 3], // Basic harmonics
+      phase: Math.random() * Math.PI * 2,
+      coherence: gestureData.intensity,
+      timestamp: Date.now()
+    };
+
+    setResonanceData(syntheticResonance);
+
+    setSystemState(prev => ({
+      ...prev,
+      resonanceRoots: [...prev.resonanceRoots.slice(-10), syntheticResonance],
+      phase: determinePhase(syntheticResonance, prev.resonanceRoots),
+      evolutionPath: [...prev.evolutionPath, {
+        timestamp: Date.now(),
+        phase: prev.phase,
+        resonance: syntheticResonance.frequency,
+        coherence: syntheticResonance.coherence
+      }]
+    }));
+  }, [systemState.mode]);
+
   // Determine system phase based on resonance patterns
   const determinePhase = (current: ResonanceData, history: ResonanceData[]): SystemState['phase'] => {
     if (history.length < 3) return 'void';
@@ -89,49 +121,61 @@ export const ResonantBlank = () => {
   };
 
   return (
-    <div className="min-h-screen bg-void relative overflow-hidden">
+    <div className="min-h-screen bg-void relative overflow-hidden touch-none">
       {/* Quantum Field Background */}
       <div className="absolute inset-0 bg-field-gradient animate-quantum-field opacity-30" />
       
       {/* Main Interface */}
       <div className="relative z-10 flex flex-col h-screen">
-        {/* Header Controls */}
-        <div className="absolute top-4 left-4 z-20 flex gap-4">
-          <ModeToggle
-            mode={systemState.mode}
-            onModeChange={handleModeChange}
-          />
-          <button
-            onClick={handleSystemActivation}
-            className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-              isActive 
-                ? 'bg-resonance-gamma text-void shadow-resonance' 
-                : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60'
-            }`}
-          >
-            {isActive ? 'Deactivate' : 'Activate System'}
-          </button>
-        </div>
-
-        {/* System Status */}
-        <div className="absolute top-4 right-4 z-20 text-right">
-          <div className="text-sm text-foreground/70 mb-1">Phase: {systemState.phase}</div>
-          <div className="text-xs text-foreground/50">
-            Resonance Roots: {systemState.resonanceRoots.length}
+        {/* Mobile-Optimized Header Controls */}
+        <div className="absolute top-2 left-2 right-2 z-20 flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <div className="flex gap-2">
+            <ModeToggle
+              mode={systemState.mode}
+              onModeChange={handleModeChange}
+            />
+            <button
+              onClick={handleSystemActivation}
+              className={`px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium ${
+                isActive 
+                  ? 'bg-resonance-gamma text-void shadow-resonance' 
+                  : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60'
+              }`}
+            >
+              {isActive ? 'Stop' : 'Start'}
+            </button>
           </div>
-          {resonanceData && (
-            <div className="text-xs text-resonance-gamma">
-              Coherence: {(resonanceData.coherence * 100).toFixed(1)}%
+          
+          {/* Mobile System Status */}
+          <div className="flex-1 text-right">
+            <div className="text-xs text-foreground/70 mb-1">
+              Phase: <span className={`font-medium ${getPhaseColor(systemState.phase)}`}>
+                {systemState.phase.toUpperCase()}
+              </span>
             </div>
-          )}
+            <div className="text-xs text-foreground/50">
+              Roots: {systemState.resonanceRoots.length}
+              {resonanceData && (
+                <span className="ml-2 text-resonance-gamma">
+                  {(resonanceData.coherence * 100).toFixed(0)}%
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Main Canvas Area */}
-        <div className="flex-1 relative">
+        {/* Main Canvas Area - Touch Optimized */}
+        <div className="flex-1 relative mt-16 sm:mt-4">
           <VoidCanvas
             systemState={systemState}
             resonanceData={resonanceData}
             isActive={isActive}
+          />
+          
+          {/* Touch Interaction Layer */}
+          <TouchInteraction
+            onGesture={handleGesture}
+            isActive={isActive && systemState.mode === 'participant'}
           />
           
           {/* Resonance Visualization Overlay */}
@@ -143,12 +187,12 @@ export const ResonantBlank = () => {
           )}
         </div>
 
-        {/* Evolution Logger */}
-        <div className="absolute bottom-4 left-4 z-20">
+        {/* Mobile-Optimized Evolution Logger */}
+        <div className="absolute bottom-2 left-2 right-2 sm:left-4 sm:right-auto sm:bottom-4 z-20">
           <EvolutionLogger evolutionPath={systemState.evolutionPath} />
         </div>
 
-        {/* Audio Capture */}
+        {/* Audio Capture with Mobile Support */}
         {isActive && (
           <AudioCapture
             onAudioData={setAudioData}
@@ -158,4 +202,15 @@ export const ResonantBlank = () => {
       </div>
     </div>
   );
+
+  // Helper function for phase colors
+  function getPhaseColor(phase: SystemState['phase']): string {
+    const colors = {
+      void: 'text-void-glow',
+      emergence: 'text-emergence',
+      coherence: 'text-coherence',
+      'phase-lock': 'text-phase-lock'
+    };
+    return colors[phase] || 'text-foreground';
+  }
 };
