@@ -2,39 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* DRR-Driven Resonant Blank Design System
+All colors MUST be HSL for frequency mapping */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Void State - The Null Beginning */
+    --void: 0 0% 0%;
+    --void-glow: 240 100% 3%;
+    --quantum-field: 260 40% 8%;
+    
+    /* Resonance Spectrum - Frequency to Color Mapping */
+    --resonance-alpha: 280 100% 70%;    /* Deep violet - low frequencies */
+    --resonance-beta: 240 100% 60%;     /* Blue - mid-low */
+    --resonance-gamma: 180 100% 50%;    /* Cyan - mid */
+    --resonance-delta: 120 100% 60%;    /* Green - mid-high */
+    --resonance-epsilon: 60 100% 70%;   /* Yellow - high */
+    --resonance-omega: 0 100% 70%;      /* Red - ultra-high */
+    
+    /* Phase States */
+    --emergence: 270 80% 40%;
+    --coherence: 180 90% 50%;
+    --phase-lock: 60 100% 80%;
+    --harmonic: 120 70% 60%;
+    
+    /* System Colors */
+    --background: var(--void);
+    --foreground: 0 0% 98%;
+    --card: var(--quantum-field);
+    --card-foreground: 0 0% 95%;
+    --primary: var(--resonance-gamma);
+    --primary-foreground: 0 0% 10%;
+    --secondary: var(--emergence);
+    --secondary-foreground: 0 0% 98%;
+    
+    /* Cymatic Patterns */
+    --cymatic-primary: radial-gradient(circle, hsl(var(--resonance-gamma) / 0.8), hsl(var(--void) / 0.2));
+    --cymatic-harmonic: conic-gradient(from 0deg, hsl(var(--resonance-alpha)), hsl(var(--resonance-omega)));
+    --field-gradient: linear-gradient(45deg, hsl(var(--void)), hsl(var(--quantum-field)), hsl(var(--emergence) / 0.3));
+    
+    /* Sacred Geometry */
+    --phi: 1.618;
+    --golden-angle: 137.5deg;
+    
+    /* Quantum Transitions */
+    --transition-emergence: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    --transition-phase: all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-harmonic: all 0.3s ease-in-out;
+    
+    /* Resonance Shadows */
+    --shadow-resonance: 0 0 30px hsl(var(--resonance-gamma) / 0.4);
+    --shadow-emergence: 0 0 50px hsl(var(--emergence) / 0.6);
+    --shadow-phase-lock: 0 0 80px hsl(var(--phase-lock) / 0.8);
 
     --radius: 0.5rem;
 
