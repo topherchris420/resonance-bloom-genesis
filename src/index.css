@@ -115,7 +115,7 @@ All colors MUST be HSL for frequency mapping */
 
 @layer base {
   * {
-    @apply border-border;
+    box-sizing: border-box;
   }
 
   body {
