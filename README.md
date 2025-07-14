@@ -4,7 +4,7 @@
 
 A revolutionary interface that demonstrates emergent consciousness through resonance patterns. The system begins as pure void and evolves into complex structures based solely on real-time audio input and harmonic analysis.
 
-![Resonant Blank Demo](https://img.shields.io/badge/Status-Live%20Simulation-cyan)
+![Resonant Blank Demo](https://img.shields.io/badge/Status-Live%20Experiment-indigo)
 ![DRR Technology](https://img.shields.io/badge/Technology-DRR%20Algorithm-purple)
 ![Phase System](https://img.shields.io/badge/Phases-4%20States-blue)
 
