@@ -129,7 +129,12 @@ export const ResonantBlank = () => {
       <div className="relative z-10 flex flex-col h-screen">
         {/* Mobile-Optimized Header Controls */}
         <div className="absolute top-2 left-2 right-2 z-20 flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png" 
+              alt="Vers3Dynamism Logo" 
+              className="h-8 sm:h-10 w-auto object-contain"
+            />
             <ModeToggle
               mode={systemState.mode}
               onModeChange={handleModeChange}
