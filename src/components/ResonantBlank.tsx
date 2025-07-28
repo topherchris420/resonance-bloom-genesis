@@ -6,6 +6,10 @@ import { EvolutionLogger } from './EvolutionLogger';
 import { ModeToggle } from './ModeToggle';
 import { ResonanceVisualization } from './ResonanceVisualization';
 import { TouchInteraction } from './TouchInteraction';
+import { MultiSpectrumEngine, SignalData } from './MultiSpectrumEngine';
+import { CognitiveDashboard, CognitiveState } from './CognitiveDashboard';
+import { SteganographyModule } from './SteganographyModule';
+import { VoiceprintAuth } from './VoiceprintAuth';
 import { toast } from 'sonner';
 
 export interface ResonanceData {
@@ -23,6 +27,7 @@ export interface SystemState {
   resonanceRoots: ResonanceData[];
   structures: any[];
   evolutionPath: any[];
+  signalSource: 'audio' | 'multi-spectrum';
 }
 
 export const ResonantBlank = () => {
@@ -31,12 +36,17 @@ export const ResonantBlank = () => {
     phase: 'void',
     resonanceRoots: [],
     structures: [],
-    evolutionPath: []
+    evolutionPath: [],
+    signalSource: 'audio',
   });
 
   const [isActive, setIsActive] = useState(false);
   const [audioData, setAudioData] = useState<Float32Array | null>(null);
   const [resonanceData, setResonanceData] = useState<ResonanceData | null>(null);
+  const [cognitiveState, setCognitiveState] = useState<CognitiveState | null>(null);
+  const [extractedMessage, setExtractedMessage] = useState('');
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const drrProcessorRef = useRef<any>(null);
 
@@ -52,6 +62,8 @@ export const ResonantBlank = () => {
 
     const resonance = drrProcessorRef.current.detectResonanceRoots(audioBuffer);
     setResonanceData(resonance);
+    const cognitive = drrProcessorRef.current.analyzeCognitiveState(resonance);
+    setCognitiveState(cognitive);
 
     // Update system state based on resonance
     setSystemState(prev => ({
@@ -63,6 +75,36 @@ export const ResonantBlank = () => {
         phase: prev.phase,
         resonance: resonance.frequency,
         coherence: resonance.coherence
+      }]
+    }));
+  }, []);
+
+  const handleSignalData = useCallback((signal: SignalData) => {
+    if (!drrProcessorRef.current) return;
+
+    // Convert signal data to resonance data
+    const syntheticResonance: ResonanceData = {
+      frequency: signal.frequency,
+      amplitude: signal.amplitude,
+      harmonics: [signal.frequency * 2, signal.frequency * 3],
+      phase: Math.random() * Math.PI * 2,
+      coherence: Math.random(),
+      timestamp: signal.timestamp,
+    };
+
+    setResonanceData(syntheticResonance);
+    const cognitive = drrProcessorRef.current.analyzeCognitiveState(syntheticResonance);
+    setCognitiveState(cognitive);
+
+    setSystemState(prev => ({
+      ...prev,
+      resonanceRoots: [...prev.resonanceRoots.slice(-10), syntheticResonance],
+      phase: determinePhase(syntheticResonance, prev.resonanceRoots),
+      evolutionPath: [...prev.evolutionPath, {
+        timestamp: Date.now(),
+        phase: prev.phase,
+        resonance: syntheticResonance.frequency,
+        coherence: syntheticResonance.coherence
       }]
     }));
   }, []);
@@ -115,9 +157,42 @@ export const ResonantBlank = () => {
     toast(`Switched to ${mode} mode`);
   };
 
+  const handleSignalSourceChange = (source: 'audio' | 'multi-spectrum') => {
+    setSystemState(prev => ({ ...prev, signalSource: source }));
+    toast(`Switched to ${source} signal source`);
+  };
+
   const handleSystemActivation = () => {
     setIsActive(!isActive);
     toast(isActive ? "System deactivated" : "System activated - Beginning resonance capture");
+  };
+
+  const handleEmbedMessage = (message: string) => {
+    if (!drrProcessorRef.current) return;
+    const modifiedResonance = drrProcessorRef.current.embedMessage(message, systemState.resonanceRoots);
+    setSystemState(prev => ({ ...prev, resonanceRoots: modifiedResonance }));
+    toast('Message embedded in resonance data');
+  };
+
+  const handleExtractMessage = () => {
+    if (!drrProcessorRef.current) return;
+    const message = drrProcessorRef.current.extractMessage(systemState.resonanceRoots);
+    setExtractedMessage(message);
+    toast('Message extracted from resonance data');
+  };
+
+  const handleEnrollVoiceprint = () => {
+    if (!drrProcessorRef.current) return;
+    drrProcessorRef.current.createVoiceprint(systemState.resonanceRoots);
+    setIsEnrolled(true);
+    toast('Voiceprint enrolled');
+  };
+
+  const handleAuthenticateVoiceprint = () => {
+    if (!drrProcessorRef.current) return;
+    const isAuthenticated = drrProcessorRef.current.authenticateVoiceprint(systemState.resonanceRoots);
+    setIsAuthenticated(isAuthenticated);
+    toast(isAuthenticated ? 'Authentication successful' : 'Authentication failed');
   };
 
   return (
@@ -149,6 +224,14 @@ export const ResonantBlank = () => {
             >
               {isActive ? 'Stop' : 'Start'}
             </button>
+            <select
+              value={systemState.signalSource}
+              onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
+              className="bg-quantum-field text-foreground border border-resonance-gamma/30 rounded-lg px-2 py-1 text-sm"
+            >
+              <option value="audio">Audio</option>
+              <option value="multi-spectrum">Multi-Spectrum</option>
+            </select>
           </div>
           
           {/* Mobile System Status */}
@@ -192,16 +275,48 @@ export const ResonantBlank = () => {
           )}
         </div>
 
+        {/* Cognitive Dashboard */}
+        <div className="absolute top-24 right-2 z-20">
+          <CognitiveDashboard cognitiveState={cognitiveState} />
+        </div>
+
+        {/* Steganography Module */}
+        <div className="absolute bottom-24 right-2 z-20">
+          <SteganographyModule
+            onEmbed={handleEmbedMessage}
+            onExtract={handleExtractMessage}
+            extractedMessage={extractedMessage}
+          />
+        </div>
+
+        {/* Voiceprint Auth */}
+        <div className="absolute bottom-64 right-2 z-20">
+          <VoiceprintAuth
+            onEnroll={handleEnrollVoiceprint}
+            onAuthenticate={handleAuthenticateVoiceprint}
+            isEnrolled={isEnrolled}
+            isAuthenticated={isAuthenticated}
+          />
+        </div>
+
         {/* Mobile-Optimized Evolution Logger */}
         <div className="absolute bottom-2 left-2 right-2 sm:left-4 sm:right-auto sm:bottom-4 z-20">
           <EvolutionLogger evolutionPath={systemState.evolutionPath} />
         </div>
 
         {/* Audio Capture with Mobile Support */}
-        {isActive && (
+        {isActive && systemState.signalSource === 'audio' && (
           <AudioCapture
             onAudioData={setAudioData}
             onProcessedData={processAudioData}
+          />
+        )}
+
+        {/* Multi-Spectrum Engine */}
+        {isActive && systemState.signalSource === 'multi-spectrum' && (
+          <MultiSpectrumEngine
+            onSignalData={handleSignalData}
+            isActive={isActive}
           />
         )}
       </div>
