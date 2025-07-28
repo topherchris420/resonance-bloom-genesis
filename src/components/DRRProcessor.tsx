@@ -1,13 +1,18 @@
 import { ResonanceData } from './ResonantBlank';
+import { CognitiveState } from './CognitiveDashboard';
+import Sentiment from 'sentiment';
 
 export class DRRProcessor {
   private sampleRate: number = 44100;
   private windowSize: number = 2048;
   private hopSize: number = 1024;
   private resonanceHistory: ResonanceData[] = [];
+  private sentiment: Sentiment;
+  private voiceprint: number[] | null = null;
 
   constructor() {
     // Initialize DRR algorithms
+    this.sentiment = new Sentiment();
   }
 
   detectResonanceRoots(audioBuffer: Float32Array): ResonanceData {
@@ -49,6 +54,42 @@ export class DRRProcessor {
 
     console.log("Resonance data:", resonanceData);
     return resonanceData;
+  }
+
+  analyzeCognitiveState(resonanceData: ResonanceData): CognitiveState {
+    const { frequency, amplitude, coherence, harmonics } = resonanceData;
+
+    // Emotional State
+    let emotionalState: CognitiveState['emotionalState'] = 'calm';
+    if (amplitude > 0.5) {
+      emotionalState = coherence > 0.7 ? 'focused' : 'agitated';
+    } else {
+      emotionalState = coherence < 0.3 ? 'distracted' : 'calm';
+    }
+
+    // Mental State
+    let mentalState: CognitiveState['mentalState'] = 'receptive';
+    if (harmonics.length > 3) {
+      mentalState = frequency > 1000 ? 'analytical' : 'suggestible';
+    } else {
+      mentalState = 'receptive';
+    }
+    if (coherence < 0.2) {
+      mentalState = 'resistant';
+    }
+
+    // Sentiment Analysis (simulated from resonance data)
+    const textEquivalent = `freq:${frequency.toFixed(0)} amp:${amplitude.toFixed(2)} coh:${coherence.toFixed(2)}`;
+    const sentimentResult = this.sentiment.analyze(textEquivalent);
+
+    return {
+      emotionalState,
+      mentalState,
+      sentiment: {
+        score: sentimentResult.score,
+        label: sentimentResult.score > 0 ? 'positive' : sentimentResult.score < 0 ? 'negative' : 'neutral',
+      },
+    };
   }
 
   private calculateRMS(buffer: Float32Array): number {
@@ -204,6 +245,75 @@ export class DRRProcessor {
     }
     
     return matches / Math.max(harmonics1.length, harmonics2.length);
+  }
+
+  embedMessage(message: string, resonanceData: ResonanceData[]): ResonanceData[] {
+    const binaryMessage = this.stringToBinary(message);
+    let messageIndex = 0;
+
+    const modifiedResonanceData = resonanceData.map(data => {
+      if (messageIndex < binaryMessage.length) {
+        const bit = parseInt(binaryMessage[messageIndex], 2);
+        const newFreq = this.embedBit(data.frequency, bit);
+        messageIndex++;
+        return { ...data, frequency: newFreq };
+      }
+      return data;
+    });
+
+    return modifiedResonanceData;
+  }
+
+  extractMessage(resonanceData: ResonanceData[]): string {
+    const binaryMessage = resonanceData.map(data => this.extractBit(data.frequency)).join('');
+    return this.binaryToString(binaryMessage);
+  }
+
+  private stringToBinary(str: string): string {
+    return str.split('').map(char => {
+      return char.charCodeAt(0).toString(2).padStart(8, '0');
+    }).join('');
+  }
+
+  private binaryToString(binary: string): string {
+    const bytes = binary.match(/.{1,8}/g) || [];
+    return bytes.map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
+  }
+
+  private embedBit(value: number, bit: number): number {
+    const intValue = Math.floor(value);
+    return (intValue & ~1) | bit;
+  }
+
+  private extractBit(value: number): number {
+    const intValue = Math.floor(value);
+    return intValue & 1;
+  }
+
+  createVoiceprint(resonanceData: ResonanceData[]): void {
+    if (resonanceData.length < 5) {
+      console.error("Not enough resonance data to create a voiceprint.");
+      return;
+    }
+    const features = resonanceData.map(d => [d.frequency, d.amplitude, d.coherence]);
+    this.voiceprint = features.flat();
+  }
+
+  authenticateVoiceprint(resonanceData: ResonanceData[]): boolean {
+    if (!this.voiceprint || resonanceData.length < 5) {
+      return false;
+    }
+    const currentFeatures = resonanceData.map(d => [d.frequency, d.amplitude, d.coherence]).flat();
+
+    // Simple Euclidean distance for comparison
+    let distance = 0;
+    for (let i = 0; i < this.voiceprint.length; i++) {
+      distance += Math.pow(this.voiceprint[i] - currentFeatures[i], 2);
+    }
+    const similarity = Math.sqrt(distance);
+
+    // This threshold would need to be determined empirically
+    return similarity < 1000;
   }
 
   // Generate structures based on resonance patterns
