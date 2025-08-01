@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { VoidCanvas } from './VoidCanvas';
 import { AudioCapture } from './AudioCapture';
 import { DRRProcessor } from './DRRProcessor';
@@ -10,6 +10,7 @@ import { MultiSpectrumEngine, SignalData } from './MultiSpectrumEngine';
 import { CognitiveDashboard, CognitiveState } from './CognitiveDashboard';
 import { SteganographyModule } from './SteganographyModule';
 import { VoiceprintAuth } from './VoiceprintAuth';
+import { PerformanceMonitor } from './PerformanceMonitor';
 import { toast } from 'sonner';
 
 export interface ResonanceData {
@@ -50,10 +51,12 @@ export const ResonantBlank = () => {
 
   const drrProcessorRef = useRef<any>(null);
 
-  // Initialize DRR Processor
+  // Initialize DRR Processor with memoization
   useEffect(() => {
-    drrProcessorRef.current = new DRRProcessor();
-    toast("Resonant Blank initialized - System in void state");
+    if (!drrProcessorRef.current) {
+      drrProcessorRef.current = new DRRProcessor();
+      toast("Resonant Blank initialized - System in void state");
+    }
   }, []);
 
   // Process audio data through DRR algorithms
@@ -65,18 +68,27 @@ export const ResonantBlank = () => {
     const cognitive = drrProcessorRef.current.analyzeCognitiveState(resonance);
     setCognitiveState(cognitive);
 
-    // Update system state based on resonance
-    setSystemState(prev => ({
-      ...prev,
-      resonanceRoots: [...prev.resonanceRoots.slice(-10), resonance], // Keep last 10
-      phase: determinePhase(resonance, prev.resonanceRoots),
-      evolutionPath: [...prev.evolutionPath, {
-        timestamp: Date.now(),
-        phase: prev.phase,
-        resonance: resonance.frequency,
-        coherence: resonance.coherence
-      }]
-    }));
+    // Update system state based on resonance (optimized)
+    setSystemState(prev => {
+      const newRoots = [...prev.resonanceRoots.slice(-9), resonance]; // Keep last 10
+      const newPhase = determinePhase(resonance, prev.resonanceRoots);
+      
+      // Only update evolution path if phase changed or significant coherence change
+      const shouldUpdateEvolution = newPhase !== prev.phase || 
+        Math.abs(resonance.coherence - (prev.resonanceRoots[prev.resonanceRoots.length - 1]?.coherence || 0)) > 0.1;
+      
+      return {
+        ...prev,
+        resonanceRoots: newRoots,
+        phase: newPhase,
+        evolutionPath: shouldUpdateEvolution ? [...prev.evolutionPath.slice(-19), {
+          timestamp: Date.now(),
+          phase: prev.phase,
+          resonance: resonance.frequency,
+          coherence: resonance.coherence
+        }] : prev.evolutionPath
+      };
+    });
   }, []);
 
   const handleSignalData = useCallback((signal: SignalData) => {
@@ -96,17 +108,22 @@ export const ResonantBlank = () => {
     const cognitive = drrProcessorRef.current.analyzeCognitiveState(syntheticResonance);
     setCognitiveState(cognitive);
 
-    setSystemState(prev => ({
-      ...prev,
-      resonanceRoots: [...prev.resonanceRoots.slice(-10), syntheticResonance],
-      phase: determinePhase(syntheticResonance, prev.resonanceRoots),
-      evolutionPath: [...prev.evolutionPath, {
-        timestamp: Date.now(),
-        phase: prev.phase,
-        resonance: syntheticResonance.frequency,
-        coherence: syntheticResonance.coherence
-      }]
-    }));
+    setSystemState(prev => {
+      const newRoots = [...prev.resonanceRoots.slice(-9), syntheticResonance];
+      const newPhase = determinePhase(syntheticResonance, prev.resonanceRoots);
+      
+      return {
+        ...prev,
+        resonanceRoots: newRoots,
+        phase: newPhase,
+        evolutionPath: newPhase !== prev.phase ? [...prev.evolutionPath.slice(-19), {
+          timestamp: Date.now(),
+          phase: prev.phase,
+          resonance: syntheticResonance.frequency,
+          coherence: syntheticResonance.coherence
+        }] : prev.evolutionPath
+      };
+    });
   }, []);
 
   // Handle touch gestures (mobile input simulation)
@@ -127,21 +144,26 @@ export const ResonantBlank = () => {
 
     setResonanceData(syntheticResonance);
 
-    setSystemState(prev => ({
-      ...prev,
-      resonanceRoots: [...prev.resonanceRoots.slice(-10), syntheticResonance],
-      phase: determinePhase(syntheticResonance, prev.resonanceRoots),
-      evolutionPath: [...prev.evolutionPath, {
-        timestamp: Date.now(),
-        phase: prev.phase,
-        resonance: syntheticResonance.frequency,
-        coherence: syntheticResonance.coherence
-      }]
-    }));
+    setSystemState(prev => {
+      const newRoots = [...prev.resonanceRoots.slice(-9), syntheticResonance];
+      const newPhase = determinePhase(syntheticResonance, prev.resonanceRoots);
+      
+      return {
+        ...prev,
+        resonanceRoots: newRoots,
+        phase: newPhase,
+        evolutionPath: newPhase !== prev.phase ? [...prev.evolutionPath.slice(-19), {
+          timestamp: Date.now(),
+          phase: prev.phase,
+          resonance: syntheticResonance.frequency,
+          coherence: syntheticResonance.coherence
+        }] : prev.evolutionPath
+      };
+    });
   }, [systemState.mode]);
 
-  // Determine system phase based on resonance patterns
-  const determinePhase = (current: ResonanceData, history: ResonanceData[]): SystemState['phase'] => {
+  // Memoized phase determination for performance
+  const determinePhase = useCallback((current: ResonanceData, history: ResonanceData[]): SystemState['phase'] => {
     if (history.length < 3) return 'void';
     
     const coherenceAvg = history.slice(-3).reduce((sum, r) => sum + r.coherence, 0) / 3;
@@ -150,7 +172,7 @@ export const ResonantBlank = () => {
     if (coherenceAvg > 0.6) return 'coherence';
     if (coherenceAvg > 0.3) return 'emergence';
     return 'void';
-  };
+  }, []);
 
   const handleModeChange = (mode: 'observer' | 'participant') => {
     setSystemState(prev => ({ ...prev, mode }));
@@ -320,6 +342,9 @@ export const ResonantBlank = () => {
           />
         )}
       </div>
+      
+      {/* Performance Monitor */}
+      <PerformanceMonitor />
     </div>
   );
 

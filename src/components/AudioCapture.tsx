@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useAudioProcessor } from '../hooks/useAudioProcessor';
 
 interface AudioCaptureProps {
   onAudioData: (data: Float32Array) => void;
@@ -10,11 +11,24 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const dataArrayRef = useRef<Float32Array | null>(null);
   const animationFrameRef = useRef<number>();
+  const lastAnalysisTime = useRef<number>(0);
+  
+  const { 
+    audioContext, 
+    analyser, 
+    initializeAudioContext, 
+    createAnalyser, 
+    connectMediaStream, 
+    cleanup: cleanupAudio 
+  } = useAudioProcessor({
+    fftSize: 1024, // Optimized for mobile
+    smoothingTimeConstant: 0.3,
+    minDecibels: -90,
+    maxDecibels: -10
+  });
 
   useEffect(() => {
     initializeAudio();
@@ -22,7 +36,7 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
   }, []);
 
 
-  const initializeAudio = async () => {
+  const initializeAudio = useCallback(async () => {
     try {
       // Enhanced mobile audio constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -31,35 +45,18 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
           noiseSuppression: false,
           autoGainControl: false,
           sampleRate: 44100,
-          // Mobile-specific constraints
           channelCount: 1
         }
       });
       
       mediaStreamRef.current = stream;
 
-      // Create audio context with mobile compatibility
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContext();
-      const audioContext = audioContextRef.current;
-
-      // Resume audio context if suspended (required on mobile)
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
-
-      // Create analyser node with optimized settings
-      analyserRef.current = audioContext.createAnalyser();
-      const analyser = analyserRef.current;
-      
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.3; // Increased for mobile stability
-      analyser.minDecibels = -90;
-      analyser.maxDecibels = -10;
+      // Initialize audio context and analyser
+      const audioContext = await initializeAudioContext();
+      const analyser = createAnalyser(audioContext);
       
       // Connect audio source to analyser
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
+      connectMediaStream(stream, audioContext, analyser);
 
       // Create data array for frequency analysis
       dataArrayRef.current = new Float32Array(analyser.frequencyBinCount);
@@ -79,15 +76,22 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
       setError(`Audio access denied. Please allow microphone permissions and try again.`);
       toast.error("Microphone access required for resonance detection");
     }
-  };
+  }, [initializeAudioContext, createAnalyser, connectMediaStream]);
 
-  const startAnalysis = () => {
-    if (!analyserRef.current || !dataArrayRef.current) return;
+  const startAnalysis = useCallback(() => {
+    if (!analyser || !dataArrayRef.current) return;
 
-    const analyser = analyserRef.current;
     const dataArray = dataArrayRef.current;
 
     const analyze = () => {
+      // Throttle analysis to 20fps for better performance
+      const now = Date.now();
+      if (now - lastAnalysisTime.current < 50) {
+        animationFrameRef.current = requestAnimationFrame(analyze);
+        return;
+      }
+      lastAnalysisTime.current = now;
+
       // Get frequency data
       analyser.getFloatFrequencyData(dataArray);
       
@@ -106,9 +110,9 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
     };
 
     analyze();
-  };
+  }, [analyser, onAudioData, onProcessedData]);
 
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
@@ -117,12 +121,9 @@ export const AudioCapture = ({ onAudioData, onProcessedData }: AudioCaptureProps
       mediaStreamRef.current.getTracks().forEach(track => track.stop());
     }
 
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
-
+    cleanupAudio();
     setIsRecording(false);
-  };
+  }, [cleanupAudio]);
 
   return (
     <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 z-20">

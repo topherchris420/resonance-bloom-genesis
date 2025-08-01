@@ -4,11 +4,14 @@ import Sentiment from 'sentiment';
 
 export class DRRProcessor {
   private sampleRate: number = 44100;
-  private windowSize: number = 2048;
-  private hopSize: number = 1024;
+  private windowSize: number = 1024; // Reduced for mobile performance
+  private hopSize: number = 512;
   private resonanceHistory: ResonanceData[] = [];
   private sentiment: Sentiment;
   private voiceprint: number[] | null = null;
+  private fftCache: Map<string, Float32Array> = new Map();
+  private lastProcessTime: number = 0;
+  private readonly processInterval: number = 50; // Throttle to 20fps
 
   constructor() {
     // Initialize DRR algorithms
@@ -16,12 +19,19 @@ export class DRRProcessor {
   }
 
   detectResonanceRoots(audioBuffer: Float32Array): ResonanceData {
+    // Throttle processing for performance
+    const now = Date.now();
+    if (now - this.lastProcessTime < this.processInterval) {
+      return this.getLastResonanceData();
+    }
+    this.lastProcessTime = now;
+
     // Log actual audio input for debugging
     const rms = this.calculateRMS(audioBuffer);
     console.log("DRR Processing - RMS:", rms, "Buffer length:", audioBuffer.length);
 
-    // Apply FFT to get frequency domain data
-    const frequencies = this.performFFT(audioBuffer);
+    // Apply optimized FFT with caching
+    const frequencies = this.performOptimizedFFT(audioBuffer);
     
     // Detect dominant frequencies
     const dominantFreq = this.findDominantFrequency(frequencies);
@@ -46,9 +56,9 @@ export class DRRProcessor {
       timestamp: Date.now()
     };
 
-    // Store in history for coherence calculations
+    // Store in history for coherence calculations (optimized size)
     this.resonanceHistory.push(resonanceData);
-    if (this.resonanceHistory.length > 20) {
+    if (this.resonanceHistory.length > 10) {
       this.resonanceHistory.shift();
     }
 
@@ -100,25 +110,64 @@ export class DRRProcessor {
     return Math.sqrt(sum / buffer.length);
   }
 
-  private performFFT(buffer: Float32Array): Float32Array {
-    // Simplified FFT implementation for frequency analysis
-    const N = buffer.length;
+  private performOptimizedFFT(buffer: Float32Array): Float32Array {
+    // Use cached result if buffer hasn't changed significantly
+    const bufferHash = this.hashBuffer(buffer);
+    if (this.fftCache.has(bufferHash)) {
+      return this.fftCache.get(bufferHash)!;
+    }
+
+    // Optimized FFT for mobile performance
+    const N = Math.min(buffer.length, this.windowSize); // Limit size for performance
     const frequencies = new Float32Array(N / 2);
     
-    for (let k = 0; k < N / 2; k++) {
+    // Use decimation for better performance on mobile
+    const step = Math.max(1, Math.floor(buffer.length / N));
+    
+    for (let k = 0; k < N / 2; k += 2) { // Process every other bin for speed
       let real = 0;
       let imag = 0;
       
-      for (let n = 0; n < N; n++) {
+      for (let n = 0; n < N; n += step) {
         const angle = -2 * Math.PI * k * n / N;
-        real += buffer[n] * Math.cos(angle);
-        imag += buffer[n] * Math.sin(angle);
+        const sample = buffer[n] || 0;
+        real += sample * Math.cos(angle);
+        imag += sample * Math.sin(angle);
       }
       
-      frequencies[k] = Math.sqrt(real * real + imag * imag);
+      const magnitude = Math.sqrt(real * real + imag * imag);
+      frequencies[k] = magnitude;
+      if (k + 1 < N / 2) frequencies[k + 1] = magnitude; // Fill gaps
     }
     
+    // Cache result with size limit
+    if (this.fftCache.size > 5) {
+      const firstKey = this.fftCache.keys().next().value;
+      this.fftCache.delete(firstKey);
+    }
+    this.fftCache.set(bufferHash, frequencies);
+    
     return frequencies;
+  }
+
+  private hashBuffer(buffer: Float32Array): string {
+    // Simple hash for caching - sample every 10th element
+    let hash = '';
+    for (let i = 0; i < buffer.length; i += 10) {
+      hash += Math.floor(buffer[i] * 1000).toString();
+    }
+    return hash.substring(0, 20); // Limit hash length
+  }
+
+  private getLastResonanceData(): ResonanceData {
+    return this.resonanceHistory[this.resonanceHistory.length - 1] || {
+      frequency: 440,
+      amplitude: 0,
+      harmonics: [],
+      phase: 0,
+      coherence: 0,
+      timestamp: Date.now()
+    };
   }
 
   private findDominantFrequency(frequencies: Float32Array): number {
