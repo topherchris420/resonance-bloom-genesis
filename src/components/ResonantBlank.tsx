@@ -1,4 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 import { VoidCanvas } from './VoidCanvas';
 import { AudioCapture } from './AudioCapture';
 import { DRRProcessor } from './DRRProcessor';
@@ -218,134 +225,133 @@ export const ResonantBlank = () => {
   };
 
   return (
-    <div className="min-h-screen bg-void relative overflow-hidden touch-none">
-      {/* Quantum Field Background */}
-      <div className="absolute inset-0 bg-field-gradient animate-quantum-field opacity-30" />
-      
-      {/* Main Interface */}
-      <div className="relative z-10 flex flex-col h-screen">
-        {/* Mobile-Optimized Header Controls */}
-        <div className="absolute top-2 left-2 right-2 z-20 flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png" 
-              alt="Vers3Dynamism Logo" 
-              className="h-8 sm:h-10 w-auto object-contain"
+    <SidebarProvider>
+      <div className="min-h-screen bg-void relative overflow-hidden touch-none">
+        {/* Quantum Field Background */}
+        <div className="absolute inset-0 bg-field-gradient animate-quantum-field opacity-30" />
+
+        <Sidebar side="right" className="w-80 bg-quantum-field/50 backdrop-blur-sm">
+          <SidebarContent className="p-4 space-y-4">
+            <h2 className="text-lg font-bold text-resonance-gamma">System Controls</h2>
+
+            <CognitiveDashboard cognitiveState={cognitiveState} />
+            <SteganographyModule
+              onEmbed={handleEmbedMessage}
+              onExtract={handleExtractMessage}
+              extractedMessage={extractedMessage}
             />
-            <ModeToggle
-              mode={systemState.mode}
-              onModeChange={handleModeChange}
+            <VoiceprintAuth
+              onEnroll={handleEnrollVoiceprint}
+              onAuthenticate={handleAuthenticateVoiceprint}
+              isEnrolled={isEnrolled}
+              isAuthenticated={isAuthenticated}
             />
-            <button
-              onClick={handleSystemActivation}
-              className={`px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium ${
-                isActive 
-                  ? 'bg-resonance-gamma text-void shadow-resonance' 
-                  : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60'
-              }`}
-            >
-              {isActive ? 'Stop' : 'Start'}
-            </button>
-            <select
-              value={systemState.signalSource}
-              onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
-              className="bg-quantum-field text-foreground border border-resonance-gamma/30 rounded-lg px-2 py-1 text-sm"
-            >
-              <option value="audio">Audio</option>
-              <option value="multi-spectrum">Multi-Spectrum</option>
-            </select>
-          </div>
-          
-          {/* Mobile System Status */}
-          <div className="flex-1 text-right">
-            <div className="text-xs text-foreground/70 mb-1">
-              Phase: <span className={`font-medium ${getPhaseColor(systemState.phase)}`}>
-                {systemState.phase.toUpperCase()}
-              </span>
+
+            <div className="pt-4 mt-auto">
+              <EvolutionLogger evolutionPath={systemState.evolutionPath} />
             </div>
-            <div className="text-xs text-foreground/50">
-              Roots: {systemState.resonanceRoots.length}
-              {resonanceData && (
-                <span className="ml-2 text-resonance-gamma">
-                  {(resonanceData.coherence * 100).toFixed(0)}%
-                </span>
+
+          </SidebarContent>
+        </Sidebar>
+
+        <SidebarInset>
+          {/* Main Interface */}
+          <div className="relative z-10 flex flex-col h-screen">
+            {/* Header Controls */}
+            <header className="absolute top-2 left-2 right-2 z-20 flex items-start justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <img
+                  src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png"
+                  alt="Vers3Dynamism Logo"
+                  className="h-8 sm:h-10 w-auto object-contain"
+                />
+                <ModeToggle
+                  mode={systemState.mode}
+                  onModeChange={handleModeChange}
+                />
+                <button
+                  onClick={handleSystemActivation}
+                  className={`px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium ${
+                    isActive
+                      ? 'bg-resonance-gamma text-void shadow-resonance'
+                      : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60'
+                  }`}
+                >
+                  {isActive ? 'Stop' : 'Start'}
+                </button>
+                <select
+                  value={systemState.signalSource}
+                  onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
+                  className="bg-quantum-field text-foreground border border-resonance-gamma/30 rounded-lg px-2 py-1 text-sm"
+                >
+                  <option value="audio">Audio</option>
+                  <option value="multi-spectrum">Multi-Spectrum</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-4">
+                {/* System Status */}
+                <div className="text-right">
+                  <div className="text-xs text-foreground/70 mb-1">
+                    Phase: <span className={`font-medium ${getPhaseColor(systemState.phase)}`}>
+                      {systemState.phase.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="text-xs text-foreground/50">
+                    Roots: {systemState.resonanceRoots.length}
+                    {resonanceData && (
+                      <span className="ml-2 text-resonance-gamma">
+                        {(resonanceData.coherence * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <SidebarTrigger className="block md:hidden" />
+              </div>
+
+            </header>
+
+            {/* Main Canvas Area */}
+            <main className="flex-1 relative mt-24 sm:mt-16">
+              <VoidCanvas
+                systemState={systemState}
+                resonanceData={resonanceData}
+                isActive={isActive}
+              />
+
+              <TouchInteraction
+                onGesture={handleGesture}
+                isActive={isActive && systemState.mode === 'participant'}
+              />
+
+              {resonanceData && isActive && (
+                <ResonanceVisualization
+                  resonanceData={resonanceData}
+                  systemPhase={systemState.phase}
+                />
               )}
-            </div>
+            </main>
+
+            {/* Audio Capture & Multi-Spectrum Engine */}
+            {isActive && systemState.signalSource === 'audio' && (
+              <AudioCapture
+                onAudioData={setAudioData}
+                onProcessedData={processAudioData}
+              />
+            )}
+            {isActive && systemState.signalSource === 'multi-spectrum' && (
+              <MultiSpectrumEngine
+                onSignalData={handleSignalData}
+                isActive={isActive}
+              />
+            )}
           </div>
-        </div>
+        </SidebarInset>
 
-        {/* Main Canvas Area - Touch Optimized */}
-        <div className="flex-1 relative mt-16 sm:mt-4">
-          <VoidCanvas
-            systemState={systemState}
-            resonanceData={resonanceData}
-            isActive={isActive}
-          />
-          
-          {/* Touch Interaction Layer */}
-          <TouchInteraction
-            onGesture={handleGesture}
-            isActive={isActive && systemState.mode === 'participant'}
-          />
-          
-          {/* Resonance Visualization Overlay */}
-          {resonanceData && isActive && (
-            <ResonanceVisualization
-              resonanceData={resonanceData}
-              systemPhase={systemState.phase}
-            />
-          )}
-        </div>
-
-        {/* Cognitive Dashboard */}
-        <div className="absolute top-24 right-2 z-20">
-          <CognitiveDashboard cognitiveState={cognitiveState} />
-        </div>
-
-        {/* Steganography Module */}
-        <div className="absolute bottom-24 right-2 z-20">
-          <SteganographyModule
-            onEmbed={handleEmbedMessage}
-            onExtract={handleExtractMessage}
-            extractedMessage={extractedMessage}
-          />
-        </div>
-
-        {/* Voiceprint Auth */}
-        <div className="absolute bottom-64 right-2 z-20">
-          <VoiceprintAuth
-            onEnroll={handleEnrollVoiceprint}
-            onAuthenticate={handleAuthenticateVoiceprint}
-            isEnrolled={isEnrolled}
-            isAuthenticated={isAuthenticated}
-          />
-        </div>
-
-        {/* Mobile-Optimized Evolution Logger */}
-        <div className="absolute bottom-2 left-2 right-2 sm:left-4 sm:right-auto sm:bottom-4 z-20">
-          <EvolutionLogger evolutionPath={systemState.evolutionPath} />
-        </div>
-
-        {/* Audio Capture with Mobile Support */}
-        {isActive && systemState.signalSource === 'audio' && (
-          <AudioCapture
-            onAudioData={setAudioData}
-            onProcessedData={processAudioData}
-          />
-        )}
-
-        {/* Multi-Spectrum Engine */}
-        {isActive && systemState.signalSource === 'multi-spectrum' && (
-          <MultiSpectrumEngine
-            onSignalData={handleSignalData}
-            isActive={isActive}
-          />
-        )}
+        {/* Performance Monitor */}
+        <PerformanceMonitor />
       </div>
-      
-      {/* Performance Monitor */}
-      <PerformanceMonitor />
-    </div>
+    </SidebarProvider>
   );
 
   // Helper function for phase colors
