@@ -80,9 +80,13 @@ export const TouchInteraction = ({ onGesture, isActive }: TouchInteractionProps)
       className="absolute inset-0 z-10 touch-none"
       style={{ touchAction: 'none' }}
     >
-      {/* Visual feedback for touch interaction */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-foreground/50 bg-quantum-field/40 px-2 py-1 rounded backdrop-blur-sm">
-        Touch and drag to generate resonance
+      {/* Visual feedback for touch interaction - mobile optimized */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-foreground/50 bg-quantum-field/60 px-3 py-2 rounded-lg backdrop-blur-sm border border-resonance-gamma/20 shadow-lg">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-resonance-gamma rounded-full animate-pulse"></div>
+          <span className="hidden sm:inline">Touch and drag to generate resonance</span>
+          <span className="sm:hidden">Touch & drag</span>
+        </div>
       </div>
     </div>
   );

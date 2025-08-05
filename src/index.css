@@ -120,5 +120,32 @@ All colors MUST be HSL for frequency mapping */
 
   body {
     @apply bg-background text-foreground;
+    /* Mobile optimizations */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* Mobile viewport fixes */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  /* Touch optimization classes */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent zoom on inputs on iOS */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px;
+    }
   }
 }
