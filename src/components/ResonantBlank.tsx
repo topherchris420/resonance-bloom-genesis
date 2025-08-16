@@ -257,63 +257,76 @@ export const ResonantBlank = () => {
         <SidebarInset>
           {/* Main Interface */}
           <div className="relative z-10 flex flex-col h-screen">
-            {/* Header Controls */}
-            <header className="absolute top-2 left-2 right-2 z-20 flex flex-col sm:flex-row items-start justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
-                <img
-                  src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png"
-                  alt="Vers3Dynamism Logo"
-                  className="h-6 sm:h-8 md:h-10 w-auto object-contain"
-                />
-                <ModeToggle
-                  mode={systemState.mode}
-                  onModeChange={handleModeChange}
-                />
-                <button
-                  onClick={handleSystemActivation}
-                  className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all duration-300 text-xs sm:text-sm font-medium touch-manipulation ${
-                    isActive
-                      ? 'bg-resonance-gamma text-void shadow-resonance'
-                      : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60 active:scale-95'
-                  }`}
-                >
-                  {isActive ? 'Stop' : 'Start'}
-                </button>
-                <select
-                  value={systemState.signalSource}
-                  onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
-                  className="bg-quantum-field text-foreground border border-resonance-gamma/30 rounded-lg px-1.5 sm:px-2 py-1 text-xs sm:text-sm touch-manipulation"
-                >
-                  <option value="audio">Audio</option>
-                  <option value="multi-spectrum">Multi-Spectrum</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                {/* System Status */}
-                <div className="text-right">
-                  <div className="text-xs text-foreground/70 mb-1">
-                    <span className="hidden sm:inline">Phase: </span>
-                    <span className={`font-medium text-xs ${getPhaseColor(systemState.phase)}`}>
-                      {systemState.phase.split('-')[0].toUpperCase()}
-                    </span>
+            {/* Mobile-optimized header */}
+            <header className="absolute top-4 left-4 right-4 z-20">
+              <div className="bg-quantum-field/90 backdrop-blur-md rounded-2xl p-4 border border-foreground/20 shadow-emergence">
+                <div className="flex flex-col gap-4">
+                  {/* Top row: Logo and system status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png"
+                        alt="Vers3Dynamism Logo"
+                        className="h-8 md:h-10 w-auto object-contain"
+                      />
+                      <div className="hidden md:block">
+                        <h1 className="text-lg font-semibold text-foreground">Resonant Blank</h1>
+                        <p className="text-xs text-foreground/60">Quantum Field Interface</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="text-center">
+                        <div className="text-xs text-foreground/60 mb-1">Phase</div>
+                        <span className={`font-semibold text-sm ${getPhaseColor(systemState.phase)}`}>
+                          {systemState.phase.split('-')[0].toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-foreground/60 mb-1">Coherence</div>
+                        {resonanceData && (
+                          <span className="text-sm font-semibold text-resonance-gamma">
+                            {(resonanceData.coherence * 100).toFixed(0)}%
+                          </span>
+                        )}
+                      </div>
+                      <SidebarTrigger className="p-3 bg-quantum-field/80 rounded-xl border border-foreground/20 touch-manipulation hover:bg-foreground/10 active:scale-95" />
+                    </div>
                   </div>
-                  <div className="text-xs text-foreground/50">
-                    <span className="hidden sm:inline">Roots: </span>{systemState.resonanceRoots.length}
-                    {resonanceData && (
-                      <span className="ml-1 sm:ml-2 text-resonance-gamma">
-                        {(resonanceData.coherence * 100).toFixed(0)}%
-                      </span>
-                    )}
+
+                  {/* Bottom row: Controls */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <ModeToggle
+                      mode={systemState.mode}
+                      onModeChange={handleModeChange}
+                    />
+                    
+                    <button
+                      onClick={handleSystemActivation}
+                      className={`px-6 py-3 rounded-xl transition-all duration-300 font-medium min-h-[44px] touch-manipulation ${
+                        isActive
+                          ? 'bg-resonance-gamma text-void shadow-resonance scale-105'
+                          : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60 hover:bg-foreground/5 active:scale-95'
+                      }`}
+                    >
+                      {isActive ? 'Stop System' : 'Start System'}
+                    </button>
+                    
+                    <select
+                      value={systemState.signalSource}
+                      onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
+                      className="bg-quantum-field/80 text-foreground border border-resonance-gamma/30 rounded-xl px-4 py-3 min-h-[44px] touch-manipulation hover:border-resonance-gamma/60 focus:border-resonance-gamma focus:outline-none"
+                    >
+                      <option value="audio">Audio Input</option>
+                      <option value="multi-spectrum">Multi-Spectrum</option>
+                    </select>
                   </div>
                 </div>
-                <SidebarTrigger className="p-2 touch-manipulation active:scale-95" />
               </div>
-
             </header>
 
             {/* Main Canvas Area */}
-            <main className="flex-1 relative mt-20 sm:mt-16 md:mt-20">
+            <main className="flex-1 relative mt-32 md:mt-36">
               <VoidCanvas
                 systemState={systemState}
                 resonanceData={resonanceData}

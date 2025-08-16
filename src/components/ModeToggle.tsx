@@ -7,35 +7,33 @@ interface ModeToggleProps {
 
 export const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
   return (
-    <div className="flex bg-quantum-field/60 backdrop-blur-sm border border-foreground/20 rounded-lg p-1">
+    <div className="flex bg-quantum-field/80 backdrop-blur-md border border-foreground/30 rounded-xl p-1.5 shadow-lg">
       <button
         onClick={() => onModeChange('observer')}
         className={`
-          flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-md transition-all duration-300
+          flex items-center gap-2 px-4 py-3 md:px-5 md:py-3 rounded-lg transition-all duration-300 min-h-[44px] touch-manipulation
           ${mode === 'observer' 
-            ? 'bg-resonance-beta text-foreground shadow-sm' 
-            : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
+            ? 'bg-resonance-beta text-foreground shadow-resonance scale-105' 
+            : 'text-foreground/70 hover:text-foreground hover:bg-foreground/10 active:scale-95'
           }
         `}
       >
-        <Eye size={14} />
-        <span className="text-xs sm:text-sm font-medium hidden sm:inline">Observer</span>
-        <span className="text-xs font-medium sm:hidden">Obs</span>
+        <Eye size={18} />
+        <span className="text-sm md:text-base font-medium">Observer</span>
       </button>
       
       <button
         onClick={() => onModeChange('participant')}
         className={`
-          flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-md transition-all duration-300
+          flex items-center gap-2 px-4 py-3 md:px-5 md:py-3 rounded-lg transition-all duration-300 min-h-[44px] touch-manipulation
           ${mode === 'participant' 
-            ? 'bg-resonance-gamma text-void shadow-sm' 
-            : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
+            ? 'bg-resonance-gamma text-void shadow-resonance scale-105' 
+            : 'text-foreground/70 hover:text-foreground hover:bg-foreground/10 active:scale-95'
           }
         `}
       >
-        <Hand size={14} />
-        <span className="text-xs sm:text-sm font-medium hidden sm:inline">Participant</span>
-        <span className="text-xs font-medium sm:hidden">Part</span>
+        <Hand size={18} />
+        <span className="text-sm md:text-base font-medium">Participant</span>
       </button>
     </div>
   );
