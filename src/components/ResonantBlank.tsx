@@ -18,6 +18,7 @@ import { CognitiveDashboard, CognitiveState } from './CognitiveDashboard';
 import { SteganographyModule } from './SteganographyModule';
 import { VoiceprintAuth } from './VoiceprintAuth';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { SemanticResonanceEngine } from './SemanticResonanceEngine';
 import { toast } from 'sonner';
 
 export interface ResonanceData {
@@ -35,7 +36,7 @@ export interface SystemState {
   resonanceRoots: ResonanceData[];
   structures: any[];
   evolutionPath: any[];
-  signalSource: 'audio' | 'multi-spectrum';
+  signalSource: 'audio' | 'multi-spectrum' | 'semantic';
 }
 
 export const ResonantBlank = () => {
@@ -133,6 +134,45 @@ export const ResonantBlank = () => {
     });
   }, []);
 
+  // Handle semantic resonance data from Vers3Dynamics integration
+  const handleSemanticData = useCallback((semanticPattern: any) => {
+    if (!drrProcessorRef.current) return;
+
+    const semanticResonance: ResonanceData = {
+      frequency: semanticPattern.frequency,
+      amplitude: semanticPattern.amplitude,
+      harmonics: [
+        semanticPattern.frequency * 2,
+        semanticPattern.frequency * 3,
+        semanticPattern.frequency * 5,
+      ],
+      phase: semanticPattern.phase,
+      coherence: semanticPattern.resonance,
+      timestamp: Date.now(),
+    };
+
+    setResonanceData(semanticResonance);
+    const cognitive = drrProcessorRef.current.analyzeCognitiveState(semanticResonance);
+    setCognitiveState(cognitive);
+
+    setSystemState(prev => {
+      const newRoots = [...prev.resonanceRoots.slice(-9), semanticResonance];
+      const newPhase = determinePhase(semanticResonance, prev.resonanceRoots);
+      
+      return {
+        ...prev,
+        resonanceRoots: newRoots,
+        phase: newPhase,
+        evolutionPath: newPhase !== prev.phase ? [...prev.evolutionPath.slice(-19), {
+          timestamp: Date.now(),
+          phase: prev.phase,
+          resonance: semanticResonance.frequency,
+          coherence: semanticResonance.coherence
+        }] : prev.evolutionPath
+      };
+    });
+  }, []);
+
   // Handle touch gestures (mobile input simulation)
   const handleGesture = useCallback((gestureData: { type: string; intensity: number; frequency: number }) => {
     if (!drrProcessorRef.current || systemState.mode !== 'participant') return;
@@ -186,9 +226,10 @@ export const ResonantBlank = () => {
     toast(`Switched to ${mode} mode`);
   };
 
-  const handleSignalSourceChange = (source: 'audio' | 'multi-spectrum') => {
+  const handleSignalSourceChange = (source: 'audio' | 'multi-spectrum' | 'semantic') => {
     setSystemState(prev => ({ ...prev, signalSource: source }));
-    toast(`Switched to ${source} signal source`);
+    const sourceName = source === 'semantic' ? 'Semantic Resonance (Vers3Dynamics)' : source;
+    toast(`Switched to ${sourceName} signal source`);
   };
 
   const handleSystemActivation = () => {
@@ -315,12 +356,13 @@ export const ResonantBlank = () => {
                     
                     <select
                       value={systemState.signalSource}
-                      onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
+                      onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum' | 'semantic')}
                       className="bg-quantum-field/80 text-foreground text-sm md:text-base border-2 border-resonance-gamma/30 rounded-xl px-3 md:px-4 py-2.5 md:py-3 min-h-[44px] touch-manipulation hover:border-resonance-gamma/60 focus:border-resonance-gamma focus:outline-none transition-all"
                       style={{ transition: 'var(--transition-base)' }}
                     >
                       <option value="audio">Audio</option>
                       <option value="multi-spectrum">Multi-Spectrum</option>
+                      <option value="semantic">Semantic (V3D)</option>
                     </select>
                   </div>
                 </div>
@@ -344,6 +386,13 @@ export const ResonantBlank = () => {
                 <ResonanceVisualization
                   resonanceData={resonanceData}
                   systemPhase={systemState.phase}
+                />
+              )}
+
+              {isActive && systemState.signalSource === 'semantic' && (
+                <SemanticResonanceEngine
+                  onSemanticData={handleSemanticData}
+                  isActive={isActive}
                 />
               )}
             </main>
