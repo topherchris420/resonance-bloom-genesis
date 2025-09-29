@@ -7,33 +7,35 @@ interface ModeToggleProps {
 
 export const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
   return (
-    <div className="flex bg-quantum-field/80 backdrop-blur-md border border-foreground/30 rounded-xl p-1.5 shadow-lg">
+    <div className="flex bg-quantum-field/90 backdrop-blur-xl border-2 border-resonance-gamma/30 rounded-xl p-1 shadow-soft">
       <button
         onClick={() => onModeChange('observer')}
         className={`
-          flex items-center gap-2 px-4 py-3 md:px-5 md:py-3 rounded-lg transition-all duration-300 min-h-[44px] touch-manipulation
+          flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-lg transition-all min-h-[44px] touch-manipulation font-semibold text-xs md:text-sm
           ${mode === 'observer' 
-            ? 'bg-resonance-beta text-foreground shadow-resonance scale-105' 
-            : 'text-foreground/70 hover:text-foreground hover:bg-foreground/10 active:scale-95'
+            ? 'bg-resonance-beta text-foreground shadow-glow-intense scale-105' 
+            : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5 active:scale-95'
           }
         `}
+        style={{ transition: 'var(--transition-base)' }}
       >
-        <Eye size={18} />
-        <span className="text-sm md:text-base font-medium">Observer</span>
+        <Eye size={16} className="md:w-[18px] md:h-[18px]" />
+        <span>Observer</span>
       </button>
       
       <button
         onClick={() => onModeChange('participant')}
         className={`
-          flex items-center gap-2 px-4 py-3 md:px-5 md:py-3 rounded-lg transition-all duration-300 min-h-[44px] touch-manipulation
+          flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-lg transition-all min-h-[44px] touch-manipulation font-semibold text-xs md:text-sm
           ${mode === 'participant' 
-            ? 'bg-resonance-gamma text-void shadow-resonance scale-105' 
-            : 'text-foreground/70 hover:text-foreground hover:bg-foreground/10 active:scale-95'
+            ? 'bg-resonance-gamma text-void shadow-glow-intense scale-105' 
+            : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5 active:scale-95'
           }
         `}
+        style={{ transition: 'var(--transition-base)' }}
       >
-        <Hand size={18} />
-        <span className="text-sm md:text-base font-medium">Participant</span>
+        <Hand size={16} className="md:w-[18px] md:h-[18px]" />
+        <span>Participant</span>
       </button>
     </div>
   );

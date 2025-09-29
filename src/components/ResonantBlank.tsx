@@ -258,44 +258,44 @@ export const ResonantBlank = () => {
           {/* Main Interface */}
           <div className="relative z-10 flex flex-col h-screen">
             {/* Mobile-optimized header */}
-            <header className="absolute top-4 left-4 right-4 z-20">
-              <div className="bg-quantum-field/90 backdrop-blur-md rounded-2xl p-4 border border-foreground/20 shadow-emergence">
-                <div className="flex flex-col gap-4">
+            <header className="absolute top-3 left-3 right-3 md:top-4 md:left-4 md:right-4 z-20">
+              <div className="bg-quantum-field/95 backdrop-blur-xl rounded-3xl p-3 md:p-4 border border-resonance-gamma/20 shadow-emergence">
+                <div className="flex flex-col gap-3">
                   {/* Top row: Logo and system status */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0">
                       <img
                         src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png"
                         alt="Vers3Dynamism Logo"
-                        className="h-8 md:h-10 w-auto object-contain"
+                        className="h-7 md:h-10 w-auto object-contain flex-shrink-0"
                       />
-                      <div className="hidden md:block">
-                        <h1 className="text-lg font-semibold text-foreground">Resonant Blank</h1>
-                        <p className="text-xs text-foreground/60">Quantum Field Interface</p>
+                      <div className="hidden sm:block min-w-0">
+                        <h1 className="text-base md:text-lg font-semibold text-foreground truncate">Resonant Blank</h1>
+                        <p className="text-xs text-muted-foreground truncate">Quantum Field Interface</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                      <div className="text-center">
-                        <div className="text-xs text-foreground/60 mb-1">Phase</div>
-                        <span className={`font-semibold text-sm ${getPhaseColor(systemState.phase)}`}>
+                    <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+                      <div className="text-center px-2 py-1 rounded-lg bg-void/30">
+                        <div className="text-[10px] md:text-xs text-muted-foreground mb-0.5">Phase</div>
+                        <span className={`font-bold text-xs md:text-sm ${getPhaseColor(systemState.phase)}`}>
                           {systemState.phase.split('-')[0].toUpperCase()}
                         </span>
                       </div>
-                      <div className="text-center">
-                        <div className="text-xs text-foreground/60 mb-1">Coherence</div>
-                        {resonanceData && (
-                          <span className="text-sm font-semibold text-resonance-gamma">
+                      {resonanceData && (
+                        <div className="text-center px-2 py-1 rounded-lg bg-void/30">
+                          <div className="text-[10px] md:text-xs text-muted-foreground mb-0.5">Sync</div>
+                          <span className="text-xs md:text-sm font-bold text-resonance-gamma">
                             {(resonanceData.coherence * 100).toFixed(0)}%
                           </span>
-                        )}
-                      </div>
-                      <SidebarTrigger className="p-3 bg-quantum-field/80 rounded-xl border border-foreground/20 touch-manipulation hover:bg-foreground/10 active:scale-95" />
+                        </div>
+                      )}
+                      <SidebarTrigger className="p-2.5 md:p-3 bg-quantum-field/80 rounded-xl border border-resonance-gamma/30 touch-manipulation hover:bg-resonance-gamma/10 active:scale-95 transition-all" />
                     </div>
                   </div>
 
                   {/* Bottom row: Controls */}
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     <ModeToggle
                       mode={systemState.mode}
                       onModeChange={handleModeChange}
@@ -303,21 +303,23 @@ export const ResonantBlank = () => {
                     
                     <button
                       onClick={handleSystemActivation}
-                      className={`px-6 py-3 rounded-xl transition-all duration-300 font-medium min-h-[44px] touch-manipulation ${
+                      className={`px-4 md:px-6 py-2.5 md:py-3 rounded-xl transition-all font-semibold text-sm md:text-base min-h-[44px] touch-manipulation ${
                         isActive
-                          ? 'bg-resonance-gamma text-void shadow-resonance scale-105'
-                          : 'bg-quantum-field text-foreground border border-resonance-gamma/30 hover:border-resonance-gamma/60 hover:bg-foreground/5 active:scale-95'
+                          ? 'bg-resonance-gamma text-void shadow-resonance scale-105 hover:scale-110'
+                          : 'bg-quantum-field text-foreground border-2 border-resonance-gamma/30 hover:border-resonance-gamma/60 hover:bg-resonance-gamma/5 active:scale-95'
                       }`}
+                      style={{ transition: 'var(--transition-base)' }}
                     >
-                      {isActive ? 'Stop System' : 'Start System'}
+                      {isActive ? 'Stop' : 'Start'}
                     </button>
                     
                     <select
                       value={systemState.signalSource}
                       onChange={(e) => handleSignalSourceChange(e.target.value as 'audio' | 'multi-spectrum')}
-                      className="bg-quantum-field/80 text-foreground border border-resonance-gamma/30 rounded-xl px-4 py-3 min-h-[44px] touch-manipulation hover:border-resonance-gamma/60 focus:border-resonance-gamma focus:outline-none"
+                      className="bg-quantum-field/80 text-foreground text-sm md:text-base border-2 border-resonance-gamma/30 rounded-xl px-3 md:px-4 py-2.5 md:py-3 min-h-[44px] touch-manipulation hover:border-resonance-gamma/60 focus:border-resonance-gamma focus:outline-none transition-all"
+                      style={{ transition: 'var(--transition-base)' }}
                     >
-                      <option value="audio">Audio Input</option>
+                      <option value="audio">Audio</option>
                       <option value="multi-spectrum">Multi-Spectrum</option>
                     </select>
                   </div>

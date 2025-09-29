@@ -81,15 +81,15 @@ export const TouchInteraction = ({ onGesture, isActive }: TouchInteractionProps)
       style={{ touchAction: 'none' }}
     >
       {/* Enhanced mobile visual feedback */}
-      <div className="absolute bottom-20 md:bottom-24 left-1/2 transform -translate-x-1/2 max-w-xs md:max-w-none">
-        <div className="bg-quantum-field/90 backdrop-blur-md px-6 py-4 rounded-2xl border border-resonance-gamma/30 shadow-emergence">
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-3 h-3 bg-resonance-gamma rounded-full animate-pulse shadow-resonance"></div>
-            <span className="text-sm md:text-base text-foreground/80 font-medium">
+      <div className="absolute bottom-20 md:bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm md:max-w-md px-3">
+        <div className="bg-quantum-field/95 backdrop-blur-xl px-5 py-3.5 md:px-6 md:py-4 rounded-2xl border-2 border-resonance-gamma/40 shadow-resonance">
+          <div className="flex items-center justify-center gap-2.5 md:gap-3">
+            <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-resonance-gamma rounded-full animate-pulse shadow-resonance"></div>
+            <span className="text-sm md:text-base text-foreground font-semibold text-center">
               Touch & drag to generate resonance
             </span>
           </div>
-          <div className="text-xs text-foreground/50 text-center mt-2">
+          <div className="text-xs text-muted-foreground text-center mt-1.5">
             Quantum field interaction active
           </div>
         </div>
