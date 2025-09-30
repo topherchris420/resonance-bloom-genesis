@@ -42,16 +42,18 @@ export const ResonanceVisualization = ({ resonanceData, systemPhase }: Resonance
 
   const params = getVisualizationParams();
 
-  // Generate cymatic pattern based on frequency
+  // Generate cymatic pattern based on frequency (mobile-optimized)
   const generateCymaticPattern = () => {
     const { frequency, harmonics } = resonanceData;
     const sides = Math.floor(frequency / 50) % 12 + 3;
-    const layers = Math.min(harmonics.length + 1, 5);
+    const isMobile = window.innerWidth < 768;
+    const layers = Math.min(harmonics.length + 1, isMobile ? 3 : 5); // Fewer layers on mobile for performance
     
     return { sides, layers };
   };
 
   const pattern = generateCymaticPattern();
+  const isMobile = window.innerWidth < 768;
 
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -65,16 +67,16 @@ export const ResonanceVisualization = ({ resonanceData, systemPhase }: Resonance
             animationDuration: `${params.pulseSpeed}s`
           }}
         >
-          {/* Core resonance form - varied by state */}
+          {/* Core resonance form - varied by state, mobile-responsive */}
           <div 
-            className={`border-4 animate-pulse-resonance ${
+            className={`border-3 md:border-4 animate-pulse-resonance ${
               params.isBreathing ? 'rounded-full' : 
               params.isVoice ? 'rounded-lg rotate-45' :
               params.isStressed ? 'rounded-none' : 'rounded-full'
             }`}
             style={{
-              width: params.isStressed ? '160px' : '128px',
-              height: params.isStressed ? '160px' : '128px',
+              width: isMobile ? (params.isStressed ? '120px' : '96px') : (params.isStressed ? '160px' : '128px'),
+              height: isMobile ? (params.isStressed ? '120px' : '96px') : (params.isStressed ? '160px' : '128px'),
               borderColor: `hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%)`,
               boxShadow: `
                 0 0 ${20 + resonanceData.coherence * 40}px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.6),
@@ -183,8 +185,8 @@ export const ResonanceVisualization = ({ resonanceData, systemPhase }: Resonance
         />
       </div>
 
-      {/* Enhanced resonance particles with state variation */}
-      {Array.from({ length: Math.floor(resonanceData.amplitude * 15 + 5) }, (_, i) => {
+      {/* Enhanced resonance particles with state variation - optimized for mobile */}
+      {Array.from({ length: Math.floor(resonanceData.amplitude * (isMobile ? 8 : 15) + (isMobile ? 3 : 5)) }, (_, i) => {
         const particleSize = params.isStressed ? 2 + Math.random() * 2 : 1 + Math.random();
         return (
           <div

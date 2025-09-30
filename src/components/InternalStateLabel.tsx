@@ -57,13 +57,13 @@ export const InternalStateLabel = ({ cognitiveState, resonanceData }: InternalSt
   const emoji = getStateEmoji();
   
   return (
-    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-      <div className="bg-quantum-field/90 backdrop-blur-xl border-2 border-resonance-gamma/30 rounded-2xl px-6 py-3 shadow-emergence animate-fade-in">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{emoji}</span>
-          <div>
-            <h3 className="text-xl font-bold text-foreground">{description}</h3>
-            <p className="text-sm text-muted-foreground">
+    <div className="absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-3 max-w-[calc(100vw-24px)]">
+      <div className="bg-quantum-field/95 backdrop-blur-xl border-2 border-resonance-gamma/30 rounded-2xl px-4 md:px-6 py-2.5 md:py-3 shadow-emergence animate-fade-in">
+        <div className="flex items-center gap-2 md:gap-3">
+          <span className="text-2xl md:text-3xl flex-shrink-0">{emoji}</span>
+          <div className="min-w-0">
+            <h3 className="text-base md:text-xl font-bold text-foreground truncate">{description}</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">
               {cognitiveState.emotionalState} • {cognitiveState.mentalState}
             </p>
           </div>

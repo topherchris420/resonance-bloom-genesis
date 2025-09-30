@@ -273,9 +273,9 @@ export const ResonantBlank = () => {
         {/* Quantum Field Background */}
         <div className="absolute inset-0 bg-field-gradient animate-quantum-field opacity-30" />
 
-        <Sidebar side="right" className="w-72 md:w-80 bg-quantum-field/50 backdrop-blur-sm">
-          <SidebarContent className="p-4 space-y-4">
-            <h2 className="text-lg font-bold text-resonance-gamma">System Controls</h2>
+        <Sidebar side="right" className="w-full md:w-80 bg-quantum-field/95 backdrop-blur-xl border-l border-resonance-gamma/20">
+          <SidebarContent className="p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto">
+            <h2 className="text-lg md:text-xl font-bold text-resonance-gamma mb-2">System Controls</h2>
 
             <CognitiveDashboard cognitiveState={cognitiveState} />
             <SteganographyModule
