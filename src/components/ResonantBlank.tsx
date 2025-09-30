@@ -268,14 +268,20 @@ export const ResonantBlank = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-void relative overflow-hidden">
+    <SidebarProvider defaultOpen={false}>
+      <div className="min-h-screen w-full bg-void relative overflow-hidden">
         {/* Quantum Field Background */}
         <div className="absolute inset-0 bg-field-gradient animate-quantum-field opacity-30" />
 
-        <Sidebar side="right" className="w-full md:w-80 bg-quantum-field/95 backdrop-blur-xl border-l border-resonance-gamma/20">
+        <Sidebar 
+          side="right" 
+          className="fixed md:relative w-[85vw] md:w-80 bg-quantum-field/95 backdrop-blur-xl border-l border-resonance-gamma/20 z-50"
+          collapsible="offcanvas"
+        >
           <SidebarContent className="p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto">
-            <h2 className="text-lg md:text-xl font-bold text-resonance-gamma mb-2">System Controls</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-bold text-resonance-gamma">System Controls</h2>
+            </div>
 
             <CognitiveDashboard cognitiveState={cognitiveState} />
             <SteganographyModule
@@ -297,16 +303,16 @@ export const ResonantBlank = () => {
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset>
+        <SidebarInset className="w-full">
           {/* Main Interface */}
-          <div className="relative z-10 flex flex-col h-screen">
+          <div className="relative z-10 flex flex-col min-h-screen w-full">
             {/* Mobile-optimized header */}
             <header className="absolute top-3 left-3 right-3 md:top-4 md:left-4 md:right-4 z-20">
               <div className="bg-quantum-field/95 backdrop-blur-xl rounded-3xl p-3 md:p-4 border border-resonance-gamma/20 shadow-emergence">
                 <div className="flex flex-col gap-3">
                   {/* Top row: Logo and system status */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                       <img
                         src="/lovable-uploads/7ca37a83-809a-4274-b074-ad2d57831ca6.png"
                         alt="Vers3Dynamism Logo"
@@ -372,7 +378,7 @@ export const ResonantBlank = () => {
             </header>
 
             {/* Main Canvas Area */}
-            <main className="flex-1 relative mt-32 md:mt-36">
+            <main className="flex-1 relative pt-36 md:pt-40 pb-20 md:pb-24 w-full">
               <VoidCanvas
                 systemState={systemState}
                 resonanceData={resonanceData}
