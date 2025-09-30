@@ -9,18 +9,34 @@ interface ResonanceVisualizationProps {
 export const ResonanceVisualization = ({ resonanceData, systemPhase }: ResonanceVisualizationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Map frequency to visual parameters
+  // Enhanced visual parameters with state-based styling
   const getVisualizationParams = () => {
     const { frequency, amplitude, coherence, harmonics } = resonanceData;
     
+    // Detect signal type for specialized visuals
+    const isBreathing = frequency < 150 && coherence > 0.6;
+    const isVoice = frequency > 250 && frequency < 3000 && harmonics.length > 2;
+    const isStressed = amplitude > 0.6 || coherence < 0.3;
+    const isCalm = amplitude < 0.3 && coherence > 0.7;
+    
+    // Color mapping based on state
+    let hue = (frequency % 1000) / 1000 * 360;
+    if (isStressed) hue = 0; // Red for stress
+    else if (isCalm) hue = 200; // Blue for calm
+    else if (isBreathing) hue = 280; // Purple for breathing
+    
     return {
-      hue: (frequency % 1000) / 1000 * 360,
-      saturation: Math.min(amplitude * 100 + 50, 100),
-      lightness: Math.min(coherence * 70 + 30, 80),
-      scale: 0.5 + amplitude * 1.5,
+      hue,
+      saturation: Math.min(amplitude * 100 + 60, 100),
+      lightness: Math.min(coherence * 60 + 40, 80),
+      scale: isStressed ? 1.2 + amplitude * 1.8 : 0.5 + amplitude * 1.5,
       rotation: (frequency % 360),
-      complexity: Math.min(harmonics.length, 6),
-      pulseSpeed: Math.max(0.5, 3 - coherence * 2)
+      complexity: Math.min(harmonics.length + (isVoice ? 2 : 0), 8),
+      pulseSpeed: isStressed ? 0.3 : Math.max(0.5, 3 - coherence * 2),
+      isBreathing,
+      isVoice,
+      isStressed,
+      isCalm
     };
   };
 
@@ -39,7 +55,7 @@ export const ResonanceVisualization = ({ resonanceData, systemPhase }: Resonance
 
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
-      {/* Central Resonance Visualization */}
+      {/* Central Enhanced Cymatic Visualization */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div 
           className="relative animate-cymatic-formation"
@@ -49,26 +65,49 @@ export const ResonanceVisualization = ({ resonanceData, systemPhase }: Resonance
             animationDuration: `${params.pulseSpeed}s`
           }}
         >
-          {/* Main cymatic form */}
+          {/* Core resonance form - varied by state */}
           <div 
-            className="w-32 h-32 border-2 rounded-full animate-pulse-resonance"
+            className={`border-4 animate-pulse-resonance ${
+              params.isBreathing ? 'rounded-full' : 
+              params.isVoice ? 'rounded-lg rotate-45' :
+              params.isStressed ? 'rounded-none' : 'rounded-full'
+            }`}
             style={{
+              width: params.isStressed ? '160px' : '128px',
+              height: params.isStressed ? '160px' : '128px',
               borderColor: `hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%)`,
-              boxShadow: `0 0 ${20 + resonanceData.coherence * 30}px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.6)`
+              boxShadow: `
+                0 0 ${20 + resonanceData.coherence * 40}px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.6),
+                0 0 ${40 + resonanceData.coherence * 60}px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.4),
+                inset 0 0 ${30 + resonanceData.amplitude * 40}px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.3)
+              `,
+              background: params.isCalm ? 
+                `radial-gradient(circle, hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.1), transparent)` :
+                'transparent'
             }}
           />
           
-          {/* Harmonic layers */}
+          {/* Enhanced harmonic layers with state-based variation */}
           {Array.from({ length: pattern.layers }, (_, i) => (
             <div
               key={i}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border rounded-full animate-phase-shift"
+              className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 animate-phase-shift ${
+                params.isBreathing ? 'rounded-full' :
+                params.isVoice ? 'rounded-lg' :
+                'rounded-full'
+              }`}
               style={{
-                width: `${(i + 1) * 40 + 32}px`,
-                height: `${(i + 1) * 40 + 32}px`,
-                borderColor: `hsl(${(params.hue + i * 30) % 360}, ${params.saturation}%, ${params.lightness}%, ${0.6 - i * 0.1})`,
-                animationDelay: `${i * 0.2}s`,
-                animationDuration: `${4 + i}s`
+                width: `${(i + 1) * 50 + 32}px`,
+                height: `${(i + 1) * 50 + 32}px`,
+                borderColor: `hsl(${(params.hue + i * 40) % 360}, ${params.saturation}%, ${params.lightness}%, ${0.7 - i * 0.12})`,
+                animationDelay: `${i * 0.15}s`,
+                animationDuration: `${3 + i * 0.5}s`,
+                boxShadow: params.isStressed ? 
+                  `0 0 ${15 + i * 5}px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, ${0.4 - i * 0.08})` :
+                  'none',
+                transform: params.isVoice ? 
+                  `translate(-50%, -50%) rotate(${i * 15}deg)` :
+                  'translate(-50%, -50%)'
               }}
             />
           ))}
@@ -144,20 +183,30 @@ export const ResonanceVisualization = ({ resonanceData, systemPhase }: Resonance
         />
       </div>
 
-      {/* Resonance Particles */}
-      {Array.from({ length: Math.floor(resonanceData.amplitude * 10) }, (_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 rounded-full animate-emergence"
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            backgroundColor: `hsl(${(params.hue + i * 40) % 360}, ${params.saturation}%, ${params.lightness}%)`,
-            animationDelay: `${Math.random() * 2}s`,
-            animationDuration: `${2 + Math.random() * 3}s`
-          }}
-        />
-      ))}
+      {/* Enhanced resonance particles with state variation */}
+      {Array.from({ length: Math.floor(resonanceData.amplitude * 15 + 5) }, (_, i) => {
+        const particleSize = params.isStressed ? 2 + Math.random() * 2 : 1 + Math.random();
+        return (
+          <div
+            key={i}
+            className={`absolute rounded-full animate-emergence ${
+              params.isStressed ? 'animate-pulse' : ''
+            }`}
+            style={{
+              width: `${particleSize}px`,
+              height: `${particleSize}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              backgroundColor: `hsl(${(params.hue + i * 40) % 360}, ${params.saturation}%, ${params.lightness}%)`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${params.isCalm ? 4 + Math.random() * 4 : 2 + Math.random() * 3}s`,
+              boxShadow: params.isStressed ? 
+                `0 0 8px hsl(${params.hue}, ${params.saturation}%, ${params.lightness}%, 0.8)` :
+                'none'
+            }}
+          />
+        );
+      })}
     </div>
   );
 };

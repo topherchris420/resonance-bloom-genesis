@@ -19,6 +19,8 @@ import { SteganographyModule } from './SteganographyModule';
 import { VoiceprintAuth } from './VoiceprintAuth';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { SemanticResonanceEngine } from './SemanticResonanceEngine';
+import { InternalStateLabel } from './InternalStateLabel';
+import { ShareButton } from './ShareButton';
 import { toast } from 'sonner';
 
 export interface ResonanceData {
@@ -383,10 +385,23 @@ export const ResonantBlank = () => {
               />
 
               {resonanceData && isActive && (
-                <ResonanceVisualization
-                  resonanceData={resonanceData}
-                  systemPhase={systemState.phase}
-                />
+                <>
+                  <ResonanceVisualization
+                    resonanceData={resonanceData}
+                    systemPhase={systemState.phase}
+                  />
+                  {cognitiveState && (
+                    <>
+                      <InternalStateLabel
+                        cognitiveState={cognitiveState}
+                        resonanceData={resonanceData}
+                      />
+                      <ShareButton
+                        stateLabel={`${cognitiveState.emotionalState} pattern`}
+                      />
+                    </>
+                  )}
+                </>
               )}
 
               {isActive && systemState.signalSource === 'semantic' && (

@@ -68,27 +68,64 @@ export class DRRProcessor {
 
   analyzeCognitiveState(resonanceData: ResonanceData): CognitiveState {
     const { frequency, amplitude, coherence, harmonics } = resonanceData;
-
-    // Emotional State
+    
+    // Analyze breathing pattern (low frequency, rhythmic = breathing)
+    const isBreathing = frequency < 150 && coherence > 0.6;
+    
+    // Analyze voice pattern (250-3000Hz range with harmonics)
+    const isVoice = frequency > 250 && frequency < 3000 && harmonics.length > 2;
+    
+    // Enhanced emotional state analysis
     let emotionalState: CognitiveState['emotionalState'] = 'calm';
-    if (amplitude > 0.5) {
-      emotionalState = coherence > 0.7 ? 'focused' : 'agitated';
+    
+    if (isBreathing) {
+      // Breathing pattern analysis
+      const breathRate = frequency / 60; // Convert to breaths per minute
+      if (breathRate > 20) {
+        emotionalState = 'agitated'; // Fast breathing = stress/anxiety
+      } else if (amplitude > 0.6) {
+        emotionalState = 'agitated'; // Heavy breathing
+      } else if (coherence > 0.8) {
+        emotionalState = 'calm'; // Steady, slow breathing
+      } else {
+        emotionalState = 'distracted';
+      }
+    } else if (isVoice) {
+      // Voice pattern analysis
+      const pitchVariation = this.calculatePitchVariation();
+      if (amplitude > 0.6 && pitchVariation > 0.5) {
+        emotionalState = 'agitated'; // High energy, variable pitch = stressed
+      } else if (coherence > 0.7) {
+        emotionalState = 'focused'; // Stable voice = focused
+      } else {
+        emotionalState = 'distracted';
+      }
     } else {
-      emotionalState = coherence < 0.3 ? 'distracted' : 'calm';
+      // General audio analysis
+      if (amplitude > 0.5) {
+        emotionalState = coherence > 0.7 ? 'focused' : 'agitated';
+      } else {
+        emotionalState = coherence < 0.3 ? 'distracted' : 'calm';
+      }
     }
 
-    // Mental State
+    // Enhanced mental state
     let mentalState: CognitiveState['mentalState'] = 'receptive';
-    if (harmonics.length > 3) {
-      mentalState = frequency > 1000 ? 'analytical' : 'suggestible';
+    const complexityScore = harmonics.length * coherence;
+    
+    if (complexityScore > 4) {
+      mentalState = 'analytical'; // Complex, coherent patterns
+    } else if (coherence < 0.2) {
+      mentalState = 'resistant'; // Chaotic
+    } else if (isBreathing && coherence > 0.8) {
+      mentalState = 'receptive'; // Deep, calm breathing
+    } else if (frequency > 1000) {
+      mentalState = 'analytical'; // High frequency activity
     } else {
-      mentalState = 'receptive';
-    }
-    if (coherence < 0.2) {
-      mentalState = 'resistant';
+      mentalState = 'suggestible';
     }
 
-    // Sentiment Analysis (simulated from resonance data)
+    // Enhanced sentiment
     const textEquivalent = `freq:${frequency.toFixed(0)} amp:${amplitude.toFixed(2)} coh:${coherence.toFixed(2)}`;
     const sentimentResult = this.sentiment.analyze(textEquivalent);
 
@@ -100,6 +137,14 @@ export class DRRProcessor {
         label: sentimentResult.score > 0 ? 'positive' : sentimentResult.score < 0 ? 'negative' : 'neutral',
       },
     };
+  }
+  
+  private calculatePitchVariation(): number {
+    if (this.resonanceHistory.length < 3) return 0;
+    const recentFreqs = this.resonanceHistory.slice(-5).map(r => r.frequency);
+    const mean = recentFreqs.reduce((sum, f) => sum + f, 0) / recentFreqs.length;
+    const variance = recentFreqs.reduce((sum, f) => sum + Math.pow(f - mean, 2), 0) / recentFreqs.length;
+    return Math.sqrt(variance) / mean; // Coefficient of variation
   }
 
   private calculateRMS(buffer: Float32Array): number {
