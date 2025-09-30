@@ -1,4 +1,4 @@
-# Resonant Blank
+# Resonance App
 
 > **Live simulation of Dynamic Resonance Rooting (DRR)-driven Blank Slate Technology**
 
